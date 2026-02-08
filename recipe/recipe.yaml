@@ -1,5 +1,5 @@
 context:
-  build_number: 0
+  build_number: 1
   name: ocaml-menhir
   version: "20250912"
 
@@ -33,7 +33,9 @@ requirements:
     - ${{ m2 }}make
     - ${{ m2 }}sed
     - ocaml-dune
-    - ocaml ==5.3.0 *_10
+    - if: build_platform != target_platform
+      then:
+        - ocaml ==5.3.0 *_10
     - if: unix
       then:
         - file
@@ -42,6 +44,8 @@ requirements:
         - ${{ m2 }}coreutils
         - ${{ m2 }}diffutils
         - ${{ m2 }}which
+  host:
+    - ocaml ==5.3.0 *_10
   ignore_run_exports:
     by_name:
       - ocaml
@@ -63,20 +67,22 @@ tests:
         - ${{ library }}share/man/man1/menhir.1
         - etc/conda/test-files/*
 
-  # Python-based functional tests
-  - script: |
-      python testing/test-menhir-arch.py
-      python testing/test-menhir-functional.py
-    files:
-      recipe:
-        - testing/test_utils.py
-        - testing/test-menhir-arch.py
-        - testing/test-menhir-functional.py
-    requirements:
-      run:
-        - ${{ m2 }}file
-        - ocaml
-        - python >=3.9
+  # Python-based functional tests (skip arm64 - no emulator on conda-forge)
+  - if: not arm64
+    then:
+      script: |
+        python testing/test-menhir-arch.py
+        python testing/test-menhir-functional.py
+      files:
+        recipe:
+          - testing/test_utils.py
+          - testing/test-menhir-arch.py
+          - testing/test-menhir-functional.py
+      requirements:
+        run:
+          - ${{ m2 }}file
+          - ocaml
+          - python >=3.9
 
 about:
   license: GPL-2.0-only
