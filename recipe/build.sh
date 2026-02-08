@@ -168,10 +168,11 @@ if is_cross_compile; then
       export CONDA_OCAML_LD="ld64.lld"
       export CONDA_OCAML_AR="llvm-ar"
       export CONDA_OCAML_RANLIB="llvm-ranlib"
-      # macOS: Use clang and -dynamiclib for shared libraries
+      # macOS: Use clang with -undefined dynamic_lookup for .cmxs shared libraries
+      # This allows OCaml runtime symbols to be resolved at load time
       export CONDA_OCAML_CC="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang"
-      export CONDA_OCAML_MKEXE="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang"
-      export CONDA_OCAML_MKDLL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang -dynamiclib"
+      export CONDA_OCAML_MKEXE="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang -Wl,-rpath,@executable_path/../lib"
+      export CONDA_OCAML_MKDLL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang -shared -undefined dynamic_lookup"
     else
       # Linux: Use conda toolchain
       export CONDA_OCAML_LD="${CONDA_TOOLCHAIN_BUILD}-ld"
