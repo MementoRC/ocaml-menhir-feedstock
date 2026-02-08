@@ -36,6 +36,11 @@ requirements:
     - if: build_platform != target_platform
       then:
         - ocaml ==5.3.0 *_10
+        # macOS cross-compilation needs LLVM tools for compatible archives
+    - if: osx
+      then:
+        - llvm-tools
+        - lld
     - if: unix
       then:
         - file

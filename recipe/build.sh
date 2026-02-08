@@ -87,12 +87,38 @@ if is_cross_compile; then
 
   # Create symlinks for assembler, linker, and common tools
   if [[ -n "${CONDA_TOOLCHAIN_BUILD:-}" ]]; then
-    for tool in as ld ar nm ranlib objcopy objdump strip; do
-      BUILD_TOOL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-${tool}"
-      if [[ -x "${BUILD_TOOL}" ]]; then
-        ln -sf "${BUILD_TOOL}" "${BUILD_TOOLS_DIR}/${tool}"
+    if is_macos; then
+      # macOS: Use LLVM tools (llvm-ar, llvm-ranlib, lld) - same as OCaml build
+      for tool in as; do
+        BUILD_TOOL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-${tool}"
+        if [[ -x "${BUILD_TOOL}" ]]; then
+          ln -sf "${BUILD_TOOL}" "${BUILD_TOOLS_DIR}/${tool}"
+        fi
+      done
+      # LLVM tools for archiving and linking
+      if [[ -x "${BUILD_PREFIX}/bin/llvm-ar" ]]; then
+        ln -sf "${BUILD_PREFIX}/bin/llvm-ar" "${BUILD_TOOLS_DIR}/ar"
       fi
-    done
+      if [[ -x "${BUILD_PREFIX}/bin/llvm-ranlib" ]]; then
+        ln -sf "${BUILD_PREFIX}/bin/llvm-ranlib" "${BUILD_TOOLS_DIR}/ranlib"
+      fi
+      if [[ -x "${BUILD_PREFIX}/bin/llvm-nm" ]]; then
+        ln -sf "${BUILD_PREFIX}/bin/llvm-nm" "${BUILD_TOOLS_DIR}/nm"
+      fi
+      if [[ -x "${BUILD_PREFIX}/bin/ld64.lld" ]]; then
+        ln -sf "${BUILD_PREFIX}/bin/ld64.lld" "${BUILD_TOOLS_DIR}/ld"
+      elif [[ -x "${BUILD_PREFIX}/bin/lld" ]]; then
+        ln -sf "${BUILD_PREFIX}/bin/lld" "${BUILD_TOOLS_DIR}/ld"
+      fi
+    else
+      # Linux: Override all tools including ar/ranlib
+      for tool in as ld ar nm ranlib objcopy objdump strip; do
+        BUILD_TOOL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-${tool}"
+        if [[ -x "${BUILD_TOOL}" ]]; then
+          ln -sf "${BUILD_TOOL}" "${BUILD_TOOLS_DIR}/${tool}"
+        fi
+      done
+    fi
   fi
 
   # Prepend to PATH so BUILD tools are found first
@@ -101,9 +127,18 @@ if is_cross_compile; then
   # Set environment variables for tools that DO honor them
   if [[ -n "${CONDA_TOOLCHAIN_BUILD:-}" ]]; then
     export AS="${CONDA_TOOLCHAIN_BUILD}-as"
-    export LD="${CONDA_TOOLCHAIN_BUILD}-ld"
-    export AR="${CONDA_TOOLCHAIN_BUILD}-ar"
-    export RANLIB="${CONDA_TOOLCHAIN_BUILD}-ranlib"
+    if is_macos; then
+      # macOS: Use LLVM tools - same as OCaml build
+      export LD="ld64.lld"
+      export AR="llvm-ar"
+      export RANLIB="llvm-ranlib"
+      export NM="llvm-nm"
+    else
+      # Linux: Use conda toolchain
+      export LD="${CONDA_TOOLCHAIN_BUILD}-ld"
+      export AR="${CONDA_TOOLCHAIN_BUILD}-ar"
+      export RANLIB="${CONDA_TOOLCHAIN_BUILD}-ranlib"
+    fi
   fi
 
   # Override CC to use build platform compiler for any C code
@@ -126,18 +161,22 @@ if is_cross_compile; then
   # ===========================================================================
   if [[ -n "${CONDA_TOOLCHAIN_BUILD:-}" ]]; then
     export CONDA_OCAML_AS="${CONDA_TOOLCHAIN_BUILD}-as"
-    export CONDA_OCAML_LD="${CONDA_TOOLCHAIN_BUILD}-ld"
-    export CONDA_OCAML_AR="${CONDA_TOOLCHAIN_BUILD}-ar"
-    export CONDA_OCAML_RANLIB="${CONDA_TOOLCHAIN_BUILD}-ranlib"
 
-    # Platform-specific compiler selection
+    # Platform-specific toolchain selection
     if is_macos; then
+      # macOS: Use LLVM tools - consistent with OCaml build
+      export CONDA_OCAML_LD="ld64.lld"
+      export CONDA_OCAML_AR="llvm-ar"
+      export CONDA_OCAML_RANLIB="llvm-ranlib"
       # macOS: Use clang and -dynamiclib for shared libraries
       export CONDA_OCAML_CC="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang"
       export CONDA_OCAML_MKEXE="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang"
       export CONDA_OCAML_MKDLL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-clang -dynamiclib"
     else
-      # Linux: Use gcc and -shared for shared libraries
+      # Linux: Use conda toolchain
+      export CONDA_OCAML_LD="${CONDA_TOOLCHAIN_BUILD}-ld"
+      export CONDA_OCAML_AR="${CONDA_TOOLCHAIN_BUILD}-ar"
+      export CONDA_OCAML_RANLIB="${CONDA_TOOLCHAIN_BUILD}-ranlib"
       export CONDA_OCAML_CC="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-gcc"
       export CONDA_OCAML_MKEXE="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-gcc -Wl,-E -ldl"
       export CONDA_OCAML_MKDLL="${BUILD_PREFIX}/bin/${CONDA_TOOLCHAIN_BUILD}-gcc -shared"
@@ -150,10 +189,13 @@ if is_cross_compile; then
   echo "  Overridden AS: ${AS:-not set}"
   echo "  Overridden CC: ${CC:-not set}"
   echo "  Overridden LD: ${LD:-not set}"
+  echo "  Overridden AR: ${AR:-not set}"
   echo "  Overridden CONDA_OCAML_AS: ${CONDA_OCAML_AS:-not set}"
   echo "  Overridden CONDA_OCAML_CC: ${CONDA_OCAML_CC:-not set}"
+  echo "  Overridden CONDA_OCAML_AR: ${CONDA_OCAML_AR:-not set}"
   echo "  which as: $(which as)"
   echo "  which ld: $(which ld)"
+  echo "  which ar: $(which ar)"
 
   # Ensure we use BUILD compiler (not cross-compiler)
   # The native OCaml compiler should already be in PATH from build deps
