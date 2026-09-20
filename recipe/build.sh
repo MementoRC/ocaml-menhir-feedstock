@@ -26,7 +26,7 @@ fi
 
 # Set install prefix
 if is_non_unix; then
-  export MENHIR_INSTALL_PREFIX="${_PREFIX_}/Library"
+  export MENHIR_INSTALL_PREFIX="${PREFIX}/Library"
   export PATH="${BUILD_PREFIX}/bin:${BUILD_PREFIX}/Library/bin:${PATH}"
 else
   export MENHIR_INSTALL_PREFIX="${PREFIX}"
