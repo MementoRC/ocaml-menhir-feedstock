@@ -187,6 +187,26 @@ if is_cross_compile; then
   # Clear cross-compilation flags that would interfere with build-time tool
   unset CFLAGS CXXFLAGS LDFLAGS 2>/dev/null || true
 
+  # ===========================================================================
+  # FIX: Confine OCaml library search path to BUILD_PREFIX
+  # ===========================================================================
+  # Under cross, menhir is built as a build-arch tool. Leaving the HOST
+  # ocaml tree ($PREFIX/lib/ocaml) reachable on the findlib/OCaml library
+  # search path makes ocamlopt mix $PREFIX and $BUILD_PREFIX .cmxa files
+  # (e.g. unix.cmxa from $PREFIX vs stdlib.cmxa from $BUILD_PREFIX), which
+  # triggers "inconsistent assumptions over implementation" link errors.
+  # Override (not append) OCAMLPATH so only the BUILD prefix is searched.
+  # ===========================================================================
+  export OCAMLPATH="${BUILD_PREFIX}/lib/ocaml"
+
+  # OCAMLFIND_CONF override intentionally skipped: no findlib.conf path is
+  # referenced anywhere in this recipe, so a BUILD_PREFIX path cannot be
+  # confirmed without guessing.
+
+  # Neutralise any inherited CAML_LD_LIBRARY_PATH so it cannot reintroduce
+  # the HOST ($PREFIX) ocaml tree into the dynamic-load search path.
+  unset CAML_LD_LIBRARY_PATH 2>/dev/null || true
+
   echo "  Overridden AS: ${AS:-not set}"
   echo "  Overridden CC: ${CC:-not set}"
   echo "  Overridden LD: ${LD:-not set}"
@@ -223,6 +243,10 @@ if is_cross_compile; then
 elif is_non_unix; then
   echo "=== Windows build ==="
   export PATH="${BUILD_PREFIX}/Library/mingw-w64/bin:${BUILD_PREFIX}/Library/bin:${BUILD_PREFIX}/bin:${PATH}"
+
+  # dune's windows cache layout mis-handles mixed path separators and dies in
+  # mkdir_p on $SRC_DIR/dune/db. The cache buys nothing in a one-shot CI build.
+  export DUNE_CACHE=disabled
 
   dune build @install
   dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
