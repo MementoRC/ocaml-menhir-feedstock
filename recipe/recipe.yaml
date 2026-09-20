@@ -92,7 +92,6 @@ requirements:
   ignore_run_exports:
     by_name:
       - ocaml
-      - ocaml-cross-compilers
 
 tests:
   # Package contents validation
@@ -124,7 +123,7 @@ tests:
       requirements:
         run:
           - ${{ m2 }}file
-          - ocaml
+          - ocaml ${{ ocaml_compiler_version }}.*
           - python >=3.9
 
 about:
