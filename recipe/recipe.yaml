@@ -1,5 +1,5 @@
 context:
-  build_number: 1
+  build_number: 2
   name: ocaml-menhir
   version: "20250912"
 
@@ -17,6 +17,7 @@ source:
 
 build:
   number: ${{ build_number }}
+  script: build.sh
 
 requirements:
   build:
@@ -33,9 +34,21 @@ requirements:
     - ${{ m2 }}make
     - ${{ m2 }}sed
     - ocaml-dune
+    - if: unix
+      then:
+        - ${{ compiler("ocaml") }}
+      else:
+        # compiler("ocaml") expands to `ocaml_<target> <version>.*` with no
+        # toolchain track, and ocaml_win-64 publishes gcc_* and vs2022_* at the
+        # same version and build number - so the bare form is settled by upload
+        # order. Replicate what compiler() emits and add the track.
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ ocaml_toolchain }}_*
     - if: build_platform != target_platform
       then:
-        - ocaml ==5.3.0 *_10
+        # menhir is a build-time tool: it must RUN on the build machine during
+        # a cross build (see recipe/build.sh), so a build-platform ocaml is
+        # needed in addition to the cross compiler above.
+        - ocaml ${{ ocaml_compiler_version }}.*
         # macOS cross-compilation needs LLVM tools for compatible archives
     - if: osx
       then:
@@ -50,7 +63,32 @@ requirements:
         - ${{ m2 }}diffutils
         - ${{ m2 }}which
   host:
-    - ocaml ==5.3.0 *_10
+    # menhir ships compiled interfaces (menhirLib, menhirCST, menhirSdk,
+    # coq-menhirlib) whose ABI is fixed by the TARGET ocaml, so ocaml belongs
+    # here as well as in build: - under cross these are different packages.
+    - if: not unix
+      then:
+        # ocaml_win-64 publishes gcc_* and vs2022_* in the SAME subdir at the
+        # same version and build number, so an unqualified spec is settled by
+        # the solver, not by this recipe. menhir builds with compiler("m2w64_c"),
+        # i.e. mingw, so pin the gcc_ lane. Only windows needs this: the
+        # ocaml-feedstock build string injects the toolchain prefix under a
+        # `not unix` guard, so every unix subdir is single-lane bare-hash.
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ ocaml_toolchain }}_*
+      else:
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.*
+  run:
+    # OCaml interface compatibility is exact-version: a .cmi built against one
+    # ocaml minor will not load under another, which surfaces to the end user as
+    # "inconsistent assumptions over implementation Stdlib__*". Nothing paired
+    # the shipped interfaces with an ocaml at install time before this. The
+    # upstream strong_constraints export only constrains the track if ocaml is
+    # already installed; menhir needs ocaml present, so this is a dependency.
+    - if: not unix
+      then:
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ ocaml_toolchain }}_*
+      else:
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.*
   ignore_run_exports:
     by_name:
       - ocaml
