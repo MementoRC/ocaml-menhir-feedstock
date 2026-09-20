@@ -33,6 +33,12 @@ get_compiler() {
 
   local c_compiler cxx_compiler
   if [[ -n "${toolchain_prefix}" ]]; then
+    # NOTE: per the comment in configure_cross_environment() below, macOS's
+    # conda-forge compiler activation sets neither CONDA_TOOLCHAIN_HOST nor
+    # HOST, so toolchain_prefix is normally empty on macOS and this
+    # apple-darwin branch is not reached in current CI (osx-arm64 now builds
+    # natively). Left in place rather than removed since it is not proven
+    # unreachable for all conda-build configurations.
     if [[ "${toolchain_prefix}" == *"apple-darwin"* ]]; then
       c_compiler="${toolchain_prefix}-clang"
       cxx_compiler="${toolchain_prefix}-clang++"

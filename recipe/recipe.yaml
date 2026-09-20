@@ -66,6 +66,14 @@ requirements:
     # menhir ships compiled interfaces (menhirLib, menhirCST, menhirSdk,
     # coq-menhirlib) whose ABI is fixed by the TARGET ocaml, so ocaml belongs
     # here as well as in build: - under cross these are different packages.
+    #
+    # OCaml interface compatibility is exact-version: a .cmi built against one ocaml
+    # minor will not load under another. Rather than hand-maintaining that pin, host
+    # carries bare `ocaml`, whose weak run_export injects `ocaml >=<ver>,<...>` into
+    # run - so the pin follows whatever we build against. On windows ocaml_<target>
+    # additionally injects a `ocaml_win-64 * <toolchain>_*` constraint, which is what
+    # keeps the gcc_ and vs2022_ flavours from being interchangeable here.
+    - ocaml ${{ ocaml_compiler_version }}.*
     - if: not unix
       then:
         # ocaml_win-64 publishes gcc_* and vs2022_* in the SAME subdir at the
@@ -77,21 +85,6 @@ requirements:
         - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ ocaml_toolchain }}_*
       else:
         - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.*
-  run:
-    # OCaml interface compatibility is exact-version: a .cmi built against one
-    # ocaml minor will not load under another, which surfaces to the end user as
-    # "inconsistent assumptions over implementation Stdlib__*". Nothing paired
-    # the shipped interfaces with an ocaml at install time before this. The
-    # upstream strong_constraints export only constrains the track if ocaml is
-    # already installed; menhir needs ocaml present, so this is a dependency.
-    - if: not unix
-      then:
-        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ ocaml_toolchain }}_*
-      else:
-        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.*
-  ignore_run_exports:
-    by_name:
-      - ocaml
 
 tests:
   # Package contents validation
