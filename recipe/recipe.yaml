@@ -82,7 +82,7 @@ tests:
     requirements:
       run:
         - ${{ m2 }}file
-        - ocaml ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+        - ocaml ${{ ocaml_compiler_version }}.*
         - python >=3.9
 
 about:

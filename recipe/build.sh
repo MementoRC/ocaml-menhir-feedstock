@@ -78,7 +78,17 @@ if is_cross_compile; then
 
 elif is_non_unix; then
   echo "=== Windows build ==="
-  export PATH="${BUILD_PREFIX}/Library/mingw-w64/bin:${BUILD_PREFIX}/Library/bin:${BUILD_PREFIX}/bin:${PATH}"
+  # OCaml reports its own C toolchain: msvc on the MSVC port, cc on mingw.
+  # grep -a: ocamlc -config output can trip grep's binary detection.
+  ocaml_ccomp_type="$(ocamlc -config 2>/dev/null | grep -a '^ccomp_type:' | awk '{print $2}')"
+  if [[ "${ocaml_ccomp_type}" != "msvc" ]]; then
+    export PATH="${BUILD_PREFIX}/Library/mingw-w64/bin:${BUILD_PREFIX}/Library/bin:${BUILD_PREFIX}/bin:${PATH}"
+  else
+    export PATH="${BUILD_PREFIX}/Library/bin:${BUILD_PREFIX}/bin:${PATH}"
+  fi
+  echo "  ocamlc ccomp_type: ${ocaml_ccomp_type:-(undetermined)}"
+  echo "  ml64: $(command -v ml64 || echo 'NOT FOUND')"
+  echo "  cygpath: $(command -v cygpath || echo 'NOT FOUND')"
 
   # dune's windows cache layout mis-handles mixed path separators and dies in
   # mkdir_p on $SRC_DIR/dune/db. The cache buys nothing in a one-shot CI build.
