@@ -1,20 +1,11 @@
-# ocaml is not part of conda-forge's global pinning: conda_build_config.yaml in
-# conda-forge-pinning-feedstock contains no ocaml keys at all. compiler("ocaml")
-# therefore resolves only because both keys below are declared here. There is no
-# global ocaml migration either, so this version is bumped by hand when a new
-# ocaml is released.
+# Local override: gives windows two toolchain lanes (vs2022/gcc).
+c_compiler:
+  - if: not unix and x86_64
+    then:
+      - vs2022
+      - gcc
+
 ocaml_compiler:
   - ocaml
 ocaml_compiler_version:
   - "5.4.0"
-
-# menhir builds on windows with compiler("m2w64_c"), i.e. mingw, so the ocaml it
-# links against must be the gcc lane of ocaml_win-64. Only the windows branches
-# of requirements reference this key, so a flat single value is harmless on unix.
-# Deliberately NOT conda-forge's global `c_compiler` key: on win-64 that resolves
-# to vs2022, which would pin this recipe to the wrong ocaml lane while still
-# building green.
-# Flat rather than a selector map: variant config files take flat
-# `key: [values]`, unlike recipe.yaml which supports if/then.
-ocaml_toolchain:
-  - gcc
