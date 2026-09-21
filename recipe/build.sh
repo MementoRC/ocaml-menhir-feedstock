@@ -59,7 +59,7 @@ if is_cross_compile; then
     create_macos_ocamlmklib_wrapper
   fi
 
-  echo "  ocamlc: $(which ocamlc)"
+  echo "  ocamlc: $(command -v ocamlc)"
   ocamlc -version
   DETECTED_ARCH=$(ocamlc -config | grep "^architecture:" | awk '{print $2}')
   echo "  Detected OCaml target architecture: ${DETECTED_ARCH:-(undetermined)}"
@@ -94,7 +94,13 @@ elif is_non_unix; then
   # mkdir_p on $SRC_DIR/dune/db. The cache buys nothing in a one-shot CI build.
   export DUNE_CACHE=disabled
 
-  dune build @install
+  # Win32 CreateProcess needs a semicolon-delimited PATH; convert it only for
+  # dune's native ml64 spawn on msvc, not for the surrounding bash process.
+  if [[ "${ocaml_ccomp_type}" == "msvc" ]]; then
+    PATH="$(cygpath -pw "${PATH}")" dune build @install
+  else
+    dune build @install
+  fi
   dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
 
 else

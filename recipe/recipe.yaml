@@ -28,11 +28,6 @@ requirements:
         - ${{ stdlib("m2w64_c") }}
       else:
         - ${{ stdlib("c") }}
-    - ${{ m2 }}bash >=5.2
-    - ${{ m2 }}gawk
-    - ${{ m2 }}grep
-    - ${{ m2 }}make
-    - ${{ m2 }}sed
     - ocaml-dune
     - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
     - if: build_platform != target_platform
@@ -45,11 +40,15 @@ requirements:
     - if: unix
       then:
         - file
+        # build_functions.sh:200 uses GNU sed -i syntax, which BSD sed on osx would reject
+        - sed
     - if: not unix
       then:
+        - ${{ m2 }}bash >=5.2
         - ${{ m2 }}coreutils
-        - ${{ m2 }}diffutils
-        - ${{ m2 }}which
+        - ${{ m2 }}gawk
+        - ${{ m2 }}grep
+        - ${{ m2 }}sed
   host:
     - ocaml ${{ ocaml_compiler_version }}.*
     - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
