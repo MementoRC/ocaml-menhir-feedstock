@@ -40,7 +40,6 @@ requirements:
     - if: unix
       then:
         - file
-        # build_functions.sh:200 uses GNU sed -i syntax, which BSD sed on osx would reject
         - sed
     - if: not unix
       then:

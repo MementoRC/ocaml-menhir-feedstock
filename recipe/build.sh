@@ -29,7 +29,12 @@ fi
 # Set install prefix
 if is_non_unix; then
   export MENHIR_INSTALL_PREFIX="${PREFIX}/Library"
-  export PATH="${BUILD_PREFIX}/bin:${BUILD_PREFIX}/Library/bin:${PATH}"
+  # BUILD_PREFIX is a Win32 path (e.g. D:\bld\...). Appending it raw into a
+  # colon-delimited PATH leaves a drive colon mid-list, which MSYS2's automatic
+  # PATH conversion then splits on and shreds when it spawns a native process.
+  # Use the MSYS2 (/d/bld/...) form instead.
+  BUILD_PREFIX_POSIX="$(cygpath -u "${BUILD_PREFIX}")"
+  export PATH="${BUILD_PREFIX_POSIX}/bin:${BUILD_PREFIX_POSIX}/Library/bin:${PATH}"
 else
   export MENHIR_INSTALL_PREFIX="${PREFIX}"
 fi
@@ -82,9 +87,9 @@ elif is_non_unix; then
   # grep -a: ocamlc -config output can trip grep's binary detection.
   ocaml_ccomp_type="$(ocamlc -config 2>/dev/null | grep -a '^ccomp_type:' | awk '{print $2}')"
   if [[ "${ocaml_ccomp_type}" != "msvc" ]]; then
-    export PATH="${BUILD_PREFIX}/Library/mingw-w64/bin:${BUILD_PREFIX}/Library/bin:${BUILD_PREFIX}/bin:${PATH}"
+    export PATH="${BUILD_PREFIX_POSIX}/Library/mingw-w64/bin:${BUILD_PREFIX_POSIX}/Library/bin:${BUILD_PREFIX_POSIX}/bin:${PATH}"
   else
-    export PATH="${BUILD_PREFIX}/Library/bin:${BUILD_PREFIX}/bin:${PATH}"
+    export PATH="${BUILD_PREFIX_POSIX}/Library/bin:${BUILD_PREFIX_POSIX}/bin:${PATH}"
   fi
   echo "  ocamlc ccomp_type: ${ocaml_ccomp_type:-(undetermined)}"
   echo "  ml64: $(command -v ml64 || echo 'NOT FOUND')"
@@ -94,13 +99,16 @@ elif is_non_unix; then
   # mkdir_p on $SRC_DIR/dune/db. The cache buys nothing in a one-shot CI build.
   export DUNE_CACHE=disabled
 
-  # Win32 CreateProcess needs a semicolon-delimited PATH; convert it only for
-  # dune's native ml64 spawn on msvc, not for the surrounding bash process.
-  if [[ "${ocaml_ccomp_type}" == "msvc" ]]; then
-    PATH="$(cygpath -pw "${PATH}")" dune build @install
-  else
-    dune build @install
-  fi
+  # PATH is kept in MSYS2 (/d/...) form throughout: MSYS2 converts it to Win32
+  # form automatically when spawning a native process such as dune. Converting
+  # it here as well would double-convert and shred the entries.
+  # Probe what a NATIVE child sees, so the log is decisive. Marked and with
+  # stderr captured: the previous bare probe printed nothing at all.
+  echo "PROBE-BEGIN"
+  cmd.exe /c "echo NATIVE_PATH=%PATH%" 2>&1 || echo "PROBE: echo PATH failed rc=$?"
+  cmd.exe /c "where ml64" 2>&1 || echo "PROBE: where ml64 failed rc=$?"
+  echo "PROBE-END"
+  dune build @install
   dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
 
 else
