@@ -89,7 +89,14 @@ elif is_non_unix; then
   if [[ "${ocaml_ccomp_type}" != "msvc" ]]; then
     export PATH="${BUILD_PREFIX_POSIX}/Library/mingw-w64/bin:${BUILD_PREFIX_POSIX}/Library/bin:${BUILD_PREFIX_POSIX}/bin:${PATH}"
   else
-    export PATH="${BUILD_PREFIX_POSIX}/Library/bin:${BUILD_PREFIX_POSIX}/bin:${PATH}"
+    # Measured: on this lane the inherited PATH is roughly twice as long as
+    # on the (green) mingw lane above - the MSVC/SDK block appears twice and
+    # conda prefixes appear about 8 times - and MSYS2 hands native children
+    # an EMPTY PATH instead of converting it (the mingw lane converts fine).
+    # Fix: build a short PATH from scratch instead of prepending to the
+    # inherited one. /usr/bin is kept so bash's own tools still resolve.
+    ml64_dir="$(dirname "$(command -v ml64)")"
+    export PATH="${BUILD_PREFIX_POSIX}/Library/bin:${BUILD_PREFIX_POSIX}/bin:${ml64_dir}:/usr/bin:/c/Windows/System32:/c/Windows"
   fi
   echo "  ocamlc ccomp_type: ${ocaml_ccomp_type:-(undetermined)}"
   echo "  ml64: $(command -v ml64 || echo 'NOT FOUND')"
