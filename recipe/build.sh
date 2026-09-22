@@ -102,11 +102,12 @@ elif is_non_unix; then
   # PATH is kept in MSYS2 (/d/...) form throughout: MSYS2 converts it to Win32
   # form automatically when spawning a native process such as dune. Converting
   # it here as well would double-convert and shred the entries.
-  # Probe what a NATIVE child sees, so the log is decisive. Marked and with
-  # stderr captured: the previous bare probe printed nothing at all.
+  # Probe what a NATIVE child sees, so the log is decisive. MSYS2_ARG_CONV_EXCL
+  # is required: MSYS2 rewrites the leading-slash /c switch into a path, so a
+  # bare `cmd.exe /c ...` starts cmd interactively and runs nothing.
   echo "PROBE-BEGIN"
-  cmd.exe /c "echo NATIVE_PATH=%PATH%" 2>&1 || echo "PROBE: echo PATH failed rc=$?"
-  cmd.exe /c "where ml64" 2>&1 || echo "PROBE: where ml64 failed rc=$?"
+  MSYS2_ARG_CONV_EXCL='*' cmd.exe /c "echo NATIVE_PATH=%PATH%" 2>&1 || echo "PROBE: echo PATH rc=$?"
+  MSYS2_ARG_CONV_EXCL='*' cmd.exe /c "where ml64" 2>&1 || echo "PROBE: where ml64 rc=$?"
   echo "PROBE-END"
   dune build @install
   dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
