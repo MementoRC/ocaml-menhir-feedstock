@@ -19,6 +19,7 @@ source:
 
 build:
   number: ${{ build_number }}
+  string: ${{ c_compiler ~ "_" if not unix }}h${{ hash }}_${{ build_number }}
   script: build.sh
 
 requirements:
