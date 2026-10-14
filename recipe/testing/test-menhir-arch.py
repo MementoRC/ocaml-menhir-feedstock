@@ -127,7 +127,7 @@ def main():
         print("[FAIL] menhir not found in PATH")
         return 1
 
-    if platform.system() == "Windows" and not menhir_path.endswith(".exe"):
+    if platform.system() == "Windows" and not menhir_path.lower().endswith(".exe"):
         menhir_path += ".exe"
 
     print(f"Binary: {menhir_path}")
