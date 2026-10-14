@@ -1,5 +1,5 @@
 context:
-  build_number: 3
+  build_number: 4
   name: ocaml-menhir
   version: "20250912"
 
@@ -69,14 +69,23 @@ tests:
         - ${{ library }}share/man/man1/menhir.1
         - etc/conda/test-files/*
 
-  # Python-based functional tests
-  - script: |
-      python testing/test-menhir-arch.py
-      python testing/test-menhir-functional.py
+  # Architecture check
+  - script: python testing/test-menhir-arch.py
     files:
       recipe:
         - testing/test_utils.py
         - testing/test-menhir-arch.py
+    requirements:
+      run:
+        - ${{ m2 }}file
+        - ocaml ${{ ocaml_compiler_version }}.*
+        - python >=3.9
+
+  # Functional tests
+  - script: python testing/test-menhir-functional.py
+    files:
+      recipe:
+        - testing/test_utils.py
         - testing/test-menhir-functional.py
     requirements:
       run:
