@@ -26,6 +26,7 @@ if is_macos; then
   export DYLD_FALLBACK_LIBRARY_PATH="${BUILD_PREFIX}/lib:${PREFIX}/lib:${DYLD_FALLBACK_LIBRARY_PATH:-}"
 fi
 
+# Findlib packages go to <prefix>/lib/ocaml, next to the stdlib, where dune's OCAMLPATH looks.
 # Set install prefix
 if is_non_unix; then
   export MENHIR_INSTALL_PREFIX="${PREFIX}/Library"
@@ -79,7 +80,7 @@ if is_cross_compile; then
     exit 1
   fi
 
-  dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
+  dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib/ocaml" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
 
 elif is_non_unix; then
   echo "=== Windows build ==="
@@ -110,12 +111,12 @@ elif is_non_unix; then
   # form automatically when spawning a native process such as dune. Converting
   # it here as well would double-convert and shred the entries.
   dune build @install
-  dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
+  dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib/ocaml" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
 
 else
   echo "=== Native build ==="
   dune build @install
-  dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
+  dune install --prefix="${MENHIR_INSTALL_PREFIX}" --libdir="${MENHIR_INSTALL_PREFIX}/lib/ocaml" --mandir="${MENHIR_INSTALL_PREFIX}/share/man"
 fi
 
 # ==============================================================================
