@@ -1,5 +1,5 @@
 context:
-  build_number: 4
+  build_number: 5
   name: ocaml-menhir
   version: "20250912"
 
@@ -61,11 +61,11 @@ tests:
         - menhir
       files:
         - ${{ library }}doc/*
-        - ${{ library }}lib/coq-menhirlib/*
-        - ${{ library }}lib/menhir/*
-        - ${{ library }}lib/menhirCST/*
-        - ${{ library }}lib/menhirLib/*
-        - ${{ library }}lib/menhirSdk/*
+        - ${{ library }}lib/ocaml/coq-menhirlib/*
+        - ${{ library }}lib/ocaml/menhir/*
+        - ${{ library }}lib/ocaml/menhirCST/*
+        - ${{ library }}lib/ocaml/menhirLib/*
+        - ${{ library }}lib/ocaml/menhirSdk/*
         - ${{ library }}share/man/man1/menhir.1
         - etc/conda/test-files/*
 
