@@ -1,9 +1,9 @@
-# Local override: gives windows two toolchain lanes (vs2022/gcc).
+# Local override: gives windows x86_64 two toolchain lanes (vs2022/gcc) and win-arm64 a zig lane.
 c_compiler:
   - if: not unix and x86_64
     then:
       - vs2022
       - gcc
-
-ocaml_compiler_version:
-  - "5.4.0"
+  - if: not unix and arm64
+    then:
+      - zig

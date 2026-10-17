@@ -10,6 +10,8 @@ m2w64_c_stdlib:
 - m2w64-sysroot
 m2w64_c_stdlib_version:
 - '12'
+ocaml_compiler:
+- ocaml
 ocaml_compiler_version:
 - 5.4.0
 target_platform:

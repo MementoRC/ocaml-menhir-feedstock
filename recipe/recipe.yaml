@@ -1,5 +1,5 @@
 context:
-  build_number: 5
+  build_number: 6
   name: ocaml-menhir
   version: "20250912"
 
@@ -24,16 +24,29 @@ build:
 
 requirements:
   build:
+    - ${{ compiler("ocaml") }}
     - if: not unix and c_compiler == "gcc"
       then:
         - ${{ stdlib("m2w64_c") }}
       else:
         - ${{ stdlib("c") }}
-    - ocaml-dune
-    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
-    - if: build_platform != target_platform
+    # ocaml_win-64 >=14 only run-constrains the C compiler; activate it here, once (vs2022, zig)
+    - if: not unix and c_compiler != "gcc"
       then:
-        - ocaml ${{ ocaml_compiler_version }}.*
+        - ${{ compiler("c") }}
+    # compiler("ocaml") renders no toolchain track; name it on windows
+    - if: not unix
+      then:
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    # the cross compiler does not pull the native one; the build runs OCaml on the build machine
+    - if: build_platform != target_platform and unix
+      then:
+        - ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.*
+    # windows cross: the self-contained gcc track needs no vcvars
+    - if: build_platform != target_platform and not unix
+      then:
+        - ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.* gcc_*
+    - ocaml-dune
     - if: osx
       then:
         - llvm-tools
@@ -50,8 +63,17 @@ requirements:
         - ${{ m2 }}grep
         - ${{ m2 }}sed
   host:
+    # library: ocaml's run_export pins the compiler patch version
     - ocaml ${{ ocaml_compiler_version }}.*
-    - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+    # the noarch ocaml metapackage does not pin the windows toolchain track
+    - if: not unix
+      then:
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
+  # the ocaml run_export does not encode the windows toolchain track
+  run_constraints:
+    - if: not unix
+      then:
+        - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 tests:
   # Package contents validation
@@ -76,9 +98,10 @@ tests:
         - testing/test_utils.py
         - testing/test-menhir-arch.py
     requirements:
-      run:
+      # build-platform python drives the target binary via qemu binfmt on cross
+      # lanes (sparse riscv64/s390x subdirs lack python and file)
+      build:
         - ${{ m2 }}file
-        - ocaml ${{ ocaml_compiler_version }}.*
         - python >=3.9
 
   # Functional tests
@@ -88,10 +111,17 @@ tests:
         - testing/test_utils.py
         - testing/test-menhir-functional.py
     requirements:
-      run:
+      # build-platform python drives the target binary via qemu binfmt on cross
+      # lanes (sparse riscv64/s390x subdirs lack python and file)
+      build:
         - ${{ m2 }}file
-        - ocaml ${{ ocaml_compiler_version }}.*
         - python >=3.9
+      # menhir --infer runs ocamlc -i
+      run:
+        - ocaml ${{ ocaml_compiler_version }}.*
+        - if: not unix
+          then:
+            - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
 
 about:
   license: GPL-2.0-only
