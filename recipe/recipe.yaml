@@ -1,5 +1,5 @@
 context:
-  build_number: 6
+  build_number: 7
   name: ocaml-menhir
   version: "20250912"
 
@@ -25,6 +25,10 @@ build:
 requirements:
   build:
     - ${{ compiler("ocaml") }}
+    # ocaml_<tp> >=18 self-activates for cross builds (toolchain, OCAMLLIB/OCAMLPATH, cross shims on PATH)
+    - if: build_platform != target_platform and unix
+      then:
+        - ocaml_${{ target_platform }} [version='${{ ocaml_compiler_version }}.*',build_number='>=18']
     - if: not unix and c_compiler == "gcc"
       then:
         - ${{ stdlib("m2w64_c") }}
