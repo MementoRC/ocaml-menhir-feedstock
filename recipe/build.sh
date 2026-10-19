@@ -58,9 +58,7 @@ if is_cross_compile; then
   # parsers on the target, so the menhir binary and libraries built here
   # MUST be TARGET-arch (build_platform=${build_platform}, target_platform=${target_platform}).
 
-  # ocaml_<tp> >=18 activation already selects the cross compiler and toolchain.
-  # It does not set QEMU_LD_PREFIX, which qemu needs to run target binaries.
-  export QEMU_LD_PREFIX="${BUILD_PREFIX}/${OCAML_CROSS_TARGET}/sysroot"
+  # ocaml_<tp> activation already selects the cross compiler and toolchain.
   if is_macos; then
     create_macos_ocamlmklib_wrapper
   fi
