@@ -7,3 +7,7 @@ c_compiler:
   - if: not unix and arm64
     then:
       - zig
+
+# DNM: tests ocaml 5.4.1 ahead of the conda-forge migration; drop before merge.
+ocaml_compiler_version:
+  - 5.4.1
