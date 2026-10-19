@@ -24,6 +24,8 @@ build:
 
 requirements:
   build:
+    # DNM: floor ocaml 5.4.1 build 2 for the draft test; drop before merge.
+    - ocaml_${{ target_platform }} [version='${{ ocaml_compiler_version }}.*',build_number='>=2']
     - ${{ compiler("ocaml") }}
     # ocaml_<tp> self-activates for cross builds (toolchain, OCAMLLIB/OCAMLPATH, cross shims on PATH)
     - if: build_platform != target_platform and unix
@@ -63,6 +65,8 @@ requirements:
         - ${{ m2 }}grep
         - ${{ m2 }}sed
   host:
+    # DNM: floor ocaml 5.4.1 build 2 for the draft test; drop before merge.
+    - ocaml_${{ target_platform }} [version='${{ ocaml_compiler_version }}.*',build_number='>=2']
     # library: ocaml's run_export pins the compiler patch version
     - ocaml ${{ ocaml_compiler_version }}.*
     # the noarch ocaml metapackage does not pin the windows toolchain track

@@ -67,6 +67,8 @@ if is_cross_compile; then
   ls -l "$(command -v ocamlc)"
   ocamlc -config | grep -E '^(architecture|standard_library|target):' || true
   ocamlc -config | grep -a '^architecture' | od -c || true
+  ocamlc -config | grep -a '^standard_library' | od -c || true
+  ocamlc -config | LC_ALL=C grep -naP '[^\x09\x0a\x20-\x7e]' | od -c | head -40 || true
   ocamlopt -config | grep -E '^(architecture|standard_library|target):' || true
   DETECTED_ARCH=$(ocamlopt -config | grep "^architecture:" | awk '{print $2}')
   echo "  Detected OCaml target architecture: ${DETECTED_ARCH:-(undetermined)}"
