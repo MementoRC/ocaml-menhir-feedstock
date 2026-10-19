@@ -42,10 +42,6 @@ requirements:
     - if: not unix
       then:
         - ocaml_${{ target_platform }} ${{ ocaml_compiler_version }}.* ${{ c_toolchain }}
-    # the cross compiler does not pull the native one; the build runs OCaml on the build machine
-    - if: build_platform != target_platform and unix
-      then:
-        - ocaml_${{ build_platform }} ${{ ocaml_compiler_version }}.*
     # windows cross: the self-contained gcc track needs no vcvars
     - if: build_platform != target_platform and not unix
       then:
