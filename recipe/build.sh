@@ -62,7 +62,7 @@ if is_cross_compile; then
 
   echo "  ocamlc: $(command -v ocamlc)"
   ocamlc -version
-  DETECTED_ARCH=$(ocamlc -config | grep "^architecture:" | awk '{print $2}')
+  DETECTED_ARCH=$(ocamlopt -config | grep "^architecture:" | awk '{print $2}')
   echo "  Detected OCaml target architecture: ${DETECTED_ARCH:-(undetermined)}"
   echo "  OCAMLLIB: ${OCAMLLIB:-not set}"
 
