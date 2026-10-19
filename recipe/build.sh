@@ -62,6 +62,12 @@ if is_cross_compile; then
 
   echo "  ocamlc: $(command -v ocamlc)"
   ocamlc -version
+  # DNM: raw config output for ocaml-experimental (empty architecture on cross)
+  command -v ocamlc
+  ls -l "$(command -v ocamlc)"
+  ocamlc -config | grep -E '^(architecture|standard_library|target):' || true
+  ocamlc -config | grep -a '^architecture' | od -c || true
+  ocamlopt -config | grep -E '^(architecture|standard_library|target):' || true
   DETECTED_ARCH=$(ocamlopt -config | grep "^architecture:" | awk '{print $2}')
   echo "  Detected OCaml target architecture: ${DETECTED_ARCH:-(undetermined)}"
   echo "  OCAMLLIB: ${OCAMLLIB:-not set}"
