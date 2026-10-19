@@ -49,17 +49,3 @@ fail() {
 # ==============================================================================
 # MACOS HELPERS
 # ==============================================================================
-
-create_macos_ocamlmklib_wrapper() {
-  echo "  Creating macOS ocamlmklib wrapper..."
-  local real_ocamlmklib="${BUILD_PREFIX}/bin/ocamlmklib"
-
-  if [[ -f "${real_ocamlmklib}" ]] && [[ ! -f "${real_ocamlmklib}.real" ]]; then
-    mv "${real_ocamlmklib}" "${real_ocamlmklib}.real"
-    cat > "${real_ocamlmklib}" << 'WRAPPER_EOF'
-#!/bin/bash
-exec "${0}.real" -ldopt "-Wl,-undefined,dynamic_lookup" "$@"
-WRAPPER_EOF
-    chmod +x "${real_ocamlmklib}"
-  fi
-}

@@ -59,9 +59,6 @@ if is_cross_compile; then
   # MUST be TARGET-arch (build_platform=${build_platform}, target_platform=${target_platform}).
 
   # ocaml_<tp> activation already selects the cross compiler and toolchain.
-  if is_macos; then
-    create_macos_ocamlmklib_wrapper
-  fi
 
   echo "  ocamlc: $(command -v ocamlc)"
   ocamlc -version
