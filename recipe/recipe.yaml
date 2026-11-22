@@ -1,5 +1,5 @@
 context:
-  build_number: 9
+  build_number: 10
   name: ocaml-menhir
   version: "20250912"
 
