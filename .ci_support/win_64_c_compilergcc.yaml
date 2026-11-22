@@ -1,5 +1,7 @@
 c_compiler:
 - gcc
+c_compiler_version:
+- '2022'
 c_stdlib:
 - vs
 channel_sources:
@@ -13,6 +15,6 @@ m2w64_c_stdlib_version:
 ocaml_compiler:
 - ocaml
 ocaml_compiler_version:
-- 5.5.1
+- 5.5.2
 target_platform:
 - win-64

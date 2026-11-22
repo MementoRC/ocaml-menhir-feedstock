@@ -1,9 +1,9 @@
 context:
-  build_number: 8
+  build_number: 9
   name: ocaml-menhir
   version: "20250912"
 
-  # ocaml_win-64 ships gcc_* and vs2022_* at the same version/build; name the track.
+  # ocaml_win-64 ships gcc_* and vs_* at the same version/build; name the track.
   c_toolchain: ${{ "" if unix else c_compiler ~ "_*" }}
   library: ${{ "Library/" if not unix else "" }}
   m2: ${{ "m2-" if not unix else "" }}
@@ -34,10 +34,11 @@ requirements:
         - ${{ stdlib("m2w64_c") }}
       else:
         - ${{ stdlib("c") }}
-    # ocaml_win-64 >=14 only run-constrains the C compiler; activate it here, once (vs2022, zig)
+    # ocaml_win-64 >=14 only run-constrains the C compiler; activate it here, once (vs, zig)
     - if: not unix and c_compiler != "gcc"
       then:
-        - ${{ compiler("c") }}
+        # zig lane: compiler("zig") reads zig_compiler_version from the pinning; compiler("c") would render zig_win-arm64 =2022
+        - ${{ compiler("zig") if c_compiler == "zig" else compiler("c") }}
     # compiler("ocaml") renders no toolchain track; name it on windows
     - if: not unix
       then:
