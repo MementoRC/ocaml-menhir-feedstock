@@ -15,6 +15,6 @@ macos_machine:
 ocaml_compiler:
 - ocaml
 ocaml_compiler_version:
-- 5.5.1
+- 5.5.2
 target_platform:
 - osx-64
